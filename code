@@ -1,0 +1,212 @@
+# PROJECT 1: To Create a Stop Watch using TkinterIt should have START Functionality STOP Functionality RESET Functionality LAP Functionality
+
+import tkinter as tk
+import time
+
+class StopWatch:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Stopwatch")
+
+        self.is_running = False
+        self.elapsed_time = 0
+        self.start_time = 0
+
+        self.display_var = tk.StringVar()
+        self.display_var.set("00:00:00.000")
+
+        self.display_label = tk.Label(root, textvariable=self.display_var, font=("Helvetica", 36))
+        self.display_label.pack(padx=10, pady=10)
+
+        self.start_button = tk.Button(root, text="Start", width=10, command=self.start)
+        self.start_button.pack(side=tk.LEFT, padx=5)
+
+        self.stop_button = tk.Button(root, text="Stop", width=10, command=self.stop)
+        self.stop_button.pack(side=tk.LEFT, padx=5)
+
+        self.reset_button = tk.Button(root, text="Reset", width=10, command=self.reset)
+        self.reset_button.pack(side=tk.LEFT, padx=5)
+
+        self.lap_button = tk.Button(root, text="Lap", width=10, command=self.lap)
+        self.lap_button.pack(side=tk.LEFT, padx=5)
+
+        self.lap_listbox = tk.Listbox(root, width=40)
+        self.lap_listbox.pack(padx=10, pady=10)
+
+    def start(self):
+        if not self.is_running:
+            self.is_running = True
+            self.start_time = time.time()
+            self.update_time()
+
+    def stop(self):
+        if self.is_running:
+            self.is_running = False
+
+    def reset(self):
+        self.is_running = False
+        self.elapsed_time = 0
+        self.display_var.set("00:00:00.000")
+        self.lap_listbox.delete(0, tk.END)
+
+    def lap(self):
+        if self.is_running:
+            current_time = time.time()
+            elapsed = current_time - self.start_time
+            self.start_time = current_time
+
+            self.lap_listbox.insert(tk.END, self.format_time(elapsed))
+
+    def update_time(self):
+        if self.is_running:
+            elapsed_time = time.time() - self.start_time + self.elapsed_time
+            self.display_var.set(self.format_time(elapsed_time))
+            self.root.after(50, self.update_time)
+
+    def format_time(self, elapsed):
+        minutes = int(elapsed // 60)
+        seconds = int(elapsed % 60)
+        milliseconds = int((elapsed % 1) * 1000)
+        return f"{minutes:02d}:{seconds:02d}:{milliseconds:03d}"
+
+root = tk.Tk()
+stopwatch = StopWatch(root)
+root.mainloop()
+
+
+
+
+# PROJECT 2: To create a School Management System Database using MYSQL and Python
+
+import mysql.connector
+
+# Establishing a connection to the MySQL database
+db = mysql.connector.connect(
+    host="localhost",
+    user="your_username",
+    password="your_password",
+    database="your_database"
+)
+
+# Function to check if admin is valid
+def is_admin_valid(admin_id, admin_password):
+    cursor = db.cursor()
+    query = "SELECT * FROM admin WHERE admin_id = %s AND admin_password = %s"
+    cursor.execute(query, (admin_id, admin_password))
+    admin = cursor.fetchone()
+    cursor.close()
+    if admin:
+        return True
+    else:
+        return False
+
+# Function to add a student
+def add_student():
+    cursor = db.cursor()
+    # Prompt admin for student details
+    student_id = input("Enter student ID: ")
+    name = input("Enter student name: ")
+    class_ = input("Enter class: ")
+    section = input("Enter section: ")
+    age = input("Enter age: ")
+    python_mark = input("Enter Python mark: ")
+    maths_mark = input("Enter Maths mark: ")
+    cs_mark = input("Enter CS mark: ")
+    database_mark = input("Enter Database mark: ")
+    # Insert student data into the database
+    query = "INSERT INTO student (student_id, name, class, section, age, python_mark, maths_mark, cs_mark, database_mark) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+    cursor.execute(query, (student_id, name, class_, section, age, python_mark, maths_mark, cs_mark, database_mark))
+    db.commit()
+    print("Student added successfully.")
+    cursor.close()
+
+# Function to delete a student
+def delete_student():
+    cursor = db.cursor()
+    student_id = input("Enter student ID to delete: ")
+    query = "DELETE FROM student WHERE student_id = %s"
+    cursor.execute(query, (student_id,))
+    db.commit()
+    print("Student deleted successfully.")
+    cursor.close()
+
+# Function to read student data
+def read_students():
+    cursor = db.cursor()
+    read_option = input("Enter 1 for normal read, 2 to specify columns, 3 to apply conditions, or 4 to sort the data: ")
+    if read_option == '1':
+        query = "SELECT * FROM student"
+    elif read_option == '2':
+        columns = input("Enter the columns you want to read (separated by commas): ")
+        query = f"SELECT {columns} FROM student"
+    elif read_option == '3':
+        column = input("Enter the column to apply conditions on: ")
+        condition = input("Enter the condition: ")
+        query = f"SELECT * FROM student WHERE {column} {condition}"
+    elif read_option == '4':
+        sort_column = input("Enter the column to sort the data: ")
+        query = f"SELECT * FROM student ORDER BY {sort_column}"
+    cursor.execute(query)
+    students = cursor.fetchall()
+    for student in students:
+        print(student)
+    cursor.close()
+
+# Function to update student data
+def update_student():
+    cursor = db.cursor()
+    update_option = input("Enter 1 to update the entire student table or 2 to update specific student details: ")
+    if update_option == '1':
+        sub_option = input("Enter a, b, c, or d to add column, remove column, change column name, or change column datatype: ")
+        if sub_option == 'a':
+            column_name = input("Enter the name of the new column: ")
+            column_datatype = input("Enter the datatype of the new column: ")
+            query = f"ALTER TABLE student ADD COLUMN {column_name} {column_datatype}"
+        elif sub_option == 'b':
+            column_name = input("Enter the name of the column to remove: ")
+            query = f"ALTER TABLE student DROP COLUMN {column_name}"
+        elif sub_option == 'c':
+            old_column_name = input("Enter the current name of the column: ")
+            new_column_name = input("Enter the new name for the column: ")
+            query = f"ALTER TABLE student CHANGE {old_column_name} {new_column_name}"
+        elif sub_option == 'd':
+            column_name = input("Enter the name of the column to change datatype: ")
+            new_datatype = input("Enter the new datatype for the column: ")
+            query = f"ALTER TABLE student MODIFY COLUMN {column_name} {new_datatype}"
+    elif update_option == '2':
+        student_id = input("Enter student ID to update: ")
+        field = input("Enter the field to update: ")
+        new_value = input("Enter the new value: ")
+        query = f"UPDATE student SET {field} = '{new_value}' WHERE student_id = {student_id}"
+    cursor.execute(query)
+    db.commit()
+    print("Student data updated successfully.")
+    cursor.close()
+
+# Main program logic
+admin_id = input("Enter admin ID: ")
+admin_password = input("Enter admin password: ")
+if is_admin_valid(admin_id, admin_password):
+    print("Admin validated.")
+    choice = input("Enter 1 to manage students, 2 to manage teachers, or 3 to manage the principal: ")
+    if choice == '1':
+        sub_choice = input("Enter a to add a student, b to delete a student, c to read student data, or d to update student data: ")
+        if sub_choice == 'a':
+            add_student()
+        elif sub_choice == 'b':
+            delete_student()
+        elif sub_choice == 'c':
+            read_students()
+        elif sub_choice == 'd':
+            update_student()
+    elif choice == '2':
+        # Logic for managing teachers
+        pass
+    elif choice == '3':
+        # Logic for managing the principal
+        pass
+else:
+    print("Invalid admin credentials.")
+
+# Close the database connection
+db.close()
